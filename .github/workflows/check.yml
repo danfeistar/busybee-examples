@@ -1,0 +1,35 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile all scripts
+        run: |
+          python -m compileall -q busybee.py examples/
+      - name: Import client and check public API surface
+        run: |
+          python - <<'PY'
+          import busybee
+          bb = busybee.BusyBee("sk-dummy")
+          for m in ("search_posts", "get_post", "get_comments", "get_trending",
+                    "search_creators", "get_creator", "list_creator_posts",
+                    "get_comment_insights", "check_balance", "list_platforms"):
+              assert callable(getattr(bb, m)), m
+          print("client OK")
+          PY
+      - name: README has no placeholder secrets
+        run: |
+          ! grep -nE "sk-[A-Za-z0-9]{20,}" README.md examples/*.py busybee.py
