@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+examples/outputs/*
+!examples/outputs/.gitkeep
+comments.csv
